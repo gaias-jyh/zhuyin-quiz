@@ -45,7 +45,7 @@ const initialAnswers = ref({}) // Map of index -> string (第一次提交時的�
 const normalizeZhuyin = (zhuyin) => {
   // 按空格分割音節
   const syllables = zhuyin.split(/\s+/).filter(s => s.length > 0)
-  
+
   // 處理每個音節：如果輕聲符號在開頭，移到末尾
   const normalizedSyllables = syllables.map(syllable => {
     // 如果音節以輕聲符號（˙）開頭
@@ -55,7 +55,7 @@ const normalizeZhuyin = (zhuyin) => {
     }
     return syllable
   })
-  
+
   // 重新組合
   return normalizedSyllables.join(' ')
 }
@@ -173,14 +173,14 @@ const isSyllableCorrect = (syllableIndex) => {
   if (!isInCorrectionMode.value) return false
   const correctSyllablesArray = currentCorrectSyllables.value
   const originalSyllablesArray = originalAnswerSyllables.value
-  
+
   if (syllableIndex >= correctSyllablesArray.length || syllableIndex >= originalSyllablesArray.length) {
     return false
   }
-  
+
   const correctSyllable = correctSyllablesArray[syllableIndex].replace(/\s/g, '')
   const originalSyllable = originalSyllablesArray[syllableIndex].replace(/\s/g, '')
-  
+
   return correctSyllable === originalSyllable
 }
 
@@ -190,12 +190,12 @@ const compareAnswers = (correct, user) => {
   // 按空格分割音節
   const correctSyllables = correct.trim().split(/\s+/).filter(s => s.length > 0)
   const userSyllables = user.trim().split(/\s+/).filter(s => s.length > 0)
-  
+
   // 找出第一個不同的音節索引
   for (let i = 0; i < Math.max(correctSyllables.length, userSyllables.length); i++) {
     const correctSyllable = correctSyllables[i] || ''
     const userSyllable = userSyllables[i] || ''
-    
+
     // 比較音節（移除空格後比較）
     if (correctSyllable.replace(/\s/g, '') !== userSyllable.replace(/\s/g, '')) {
       return {
@@ -205,25 +205,25 @@ const compareAnswers = (correct, user) => {
       }
     }
   }
-  
+
   // 如果所有音節都匹配，返回 null
   return null
 }
 
 const handleInput = (char) => {
   const index = currentIndex.value
-  
+
   // 如果處於修正模式
   if (isInCorrectionMode.value) {
     // 只允許輸入錯誤音節的修正
     // 在修正模式下，不應該自動加空白，直接添加字符
     correctionInput.value[index] = (correctionInput.value[index] || '') + char
-    
+
     // 檢查修正是否完成（與正確音節匹配）
     const wrongIndex = wrongSyllableIndex.value[index]
     const correctSyllable = correctSyllables.value[index][wrongIndex]
     const currentCorrection = correctionInput.value[index] || ''
-    
+
     // 比較修正輸入和正確音節（移除空格後比較）
     if (currentCorrection.replace(/\s/g, '') === correctSyllable.replace(/\s/g, '')) {
       // 修正完成，合併答案
@@ -237,7 +237,7 @@ const handleInput = (char) => {
 
 const handleBackspace = () => {
   const index = currentIndex.value
-  
+
   // 如果處於修正模式
   if (isInCorrectionMode.value) {
     const currentCorrection = correctionInput.value[index] || ''
@@ -252,7 +252,7 @@ const handleBackspace = () => {
 
 const handleClear = () => {
   const index = currentIndex.value
-  
+
   // 如果處於修正模式
   if (isInCorrectionMode.value) {
     correctionInput.value[index] = ''
@@ -270,20 +270,20 @@ const completeCorrection = () => {
   const originalAnswer = originalWrongAnswer.value[index]
   const originalSyllables = originalAnswer.trim().split(/\s+/).filter(s => s.length > 0)
   const correctedSyllable = correctSyllablesArray[wrongIndex]
-  
+
   // 替換錯誤的音節
   originalSyllables[wrongIndex] = correctedSyllable
-  
+
   // 合併成完整答案
   const correctedAnswer = originalSyllables.join(' ')
   userAnswers.value[index] = correctedAnswer
-  
+
   // 立即清空修正輸入，觸發鍵盤切回子音
   correctionInput.value[index] = ''
-  
+
   // 檢查是否還有其他錯誤
   const finalComparison = compareAnswers(currentQuestion.value.zhuyin, correctedAnswer)
-  
+
   if (finalComparison) {
     // 還有其他錯誤，繼續修正下一個
     wrongSyllableIndex.value[index] = finalComparison.wrongIndex
@@ -309,15 +309,15 @@ const checkCurrentAnswer = () => {
   const index = currentIndex.value
   const correctAnswer = currentQuestion.value.zhuyin
   const userAnswer = userAnswers.value[index] || ''
-  
+
   // 記錄第一次提交時的答案（用於計分）
   if (!initialAnswers.value.hasOwnProperty(index)) {
     initialAnswers.value[index] = userAnswer
   }
-  
+
   // 檢查答案是否正確
   const isCorrect = userAnswer.replace(/\s/g, '') === correctAnswer.replace(/\s/g, '')
-  
+
   if (isCorrect) {
     // 答案正確，直接標記為已檢查
     checkedAnswers.value[index] = true
@@ -326,7 +326,7 @@ const checkCurrentAnswer = () => {
   } else {
     // 答案錯誤，進入修正模式
     const comparison = compareAnswers(correctAnswer, userAnswer)
-    
+
     if (comparison) {
       // 進入修正模式
       correctionMode.value[index] = true
@@ -378,10 +378,10 @@ const submitQuiz = () => {
   let score = 100
   questions.value.forEach((q, index) => {
     // 如果有記錄初始答案，使用初始答案計分；否則使用當前答案
-    const answerToCheck = initialAnswers.value.hasOwnProperty(index) 
-      ? initialAnswers.value[index] 
+    const answerToCheck = initialAnswers.value.hasOwnProperty(index)
+      ? initialAnswers.value[index]
       : (userAnswers.value[index] || '')
-    
+
     if (answerToCheck.replace(/\s/g, '') !== q.zhuyin.replace(/\s/g, '')) {
       score -= props.pointsPerQuestion
     }
@@ -391,8 +391,8 @@ const submitQuiz = () => {
   score = Math.max(0, score)
 
   // 計算平均每題作答時間
-  const averageTimePerQuestion = questions.value.length > 0 
-    ? Math.floor(totalTimeSpent.value / questions.value.length) 
+  const averageTimePerQuestion = questions.value.length > 0
+    ? Math.floor(totalTimeSpent.value / questions.value.length)
     : 0
 
   emit('finish', score, totalTimeSpent.value, averageTimePerQuestion)
@@ -505,19 +505,21 @@ onUnmounted(() => {
               <span class="original-answer-label">您的答案：</span>
               <span class="original-answer-text">
                 <template v-for="(syllable, index) in originalAnswerSyllables" :key="index">
-                  <span :class="{ 'syllable-correct-in-original': isSyllableCorrect(index), 'syllable-wrong-in-original': !isSyllableCorrect(index) }">
+                  <span
+                    :class="{ 'syllable-correct-in-original': isSyllableCorrect(index), 'syllable-wrong-in-original': !isSyllableCorrect(index) }">
                     {{ syllable }}<span v-if="index < originalAnswerSyllables.length - 1">&nbsp;</span>
                   </span>
                 </template>
               </span>
             </div>
-            
+
             <!-- 第二行：顯示需要修正的音節 -->
             <div class="correction-display">
               <template v-for="(syllable, index) in currentCorrectSyllables" :key="index">
                 <!-- 已經答對的音節：綠色顯示，不需要再輸入 -->
                 <span v-if="index < currentWrongSyllableIndex" class="syllable-correct">
-                  {{ syllable }}<span v-if="index < currentCorrectSyllables.length - 1" class="syllable-separator">&nbsp;</span>
+                  {{ syllable }}<span v-if="index < currentCorrectSyllables.length - 1"
+                    class="syllable-separator">&nbsp;</span>
                 </span>
                 <!-- 需要修正的音節：紅色顯示，可編輯 -->
                 <span v-else-if="index === currentWrongSyllableIndex" class="syllable-wrong">
@@ -525,7 +527,8 @@ onUnmounted(() => {
                 </span>
                 <!-- 待修正的音節：灰色顯示，稍後需要修正 -->
                 <span v-else class="syllable-pending">
-                  {{ syllable }}<span v-if="index < currentCorrectSyllables.length - 1" class="syllable-separator">&nbsp;</span>
+                  {{ syllable }}<span v-if="index < currentCorrectSyllables.length - 1"
+                    class="syllable-separator">&nbsp;</span>
                 </span>
               </template>
             </div>
@@ -551,7 +554,7 @@ onUnmounted(() => {
     </div>
 
     <ZhuyinKeyboard @input="handleInput" @backspace="handleBackspace" @clear="handleClear"
-      :disabled="(isCurrentChecked && !isInCorrectionMode) || isPaused" 
+      :disabled="(isCurrentChecked && !isInCorrectionMode) || isPaused"
       :current-input="isInCorrectionMode ? currentCorrectionInput : (isCurrentChecked ? '' : currentAnswer)"
       :is-correction-mode="isInCorrectionMode" />
 
@@ -560,7 +563,8 @@ onUnmounted(() => {
         上一題
       </button>
 
-      <button v-if="!isCurrentChecked && !isInCorrectionMode" @click="checkCurrentAnswer" class="nav-btn submit" :disabled="isPaused">
+      <button v-if="!isCurrentChecked && !isInCorrectionMode" @click="checkCurrentAnswer" class="nav-btn submit"
+        :disabled="isPaused">
         送出
       </button>
 
@@ -581,7 +585,7 @@ onUnmounted(() => {
   align-items: center;
   max-width: 800px;
   margin: 0 auto;
-  padding: 10px;
+  padding: 5px;
   /* iOS 修正：避免內容被底部導航欄遮擋 */
   height: calc(100vh - 120px);
   /* 支援 iOS safe area */
@@ -1061,4 +1065,3 @@ onUnmounted(() => {
   color: white;
 }
 </style>
-

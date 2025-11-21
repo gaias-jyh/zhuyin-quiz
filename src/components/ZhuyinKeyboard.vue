@@ -25,8 +25,8 @@ const isDarkMode = inject('isDarkMode', ref(true)) // 從 App.vue 注入深色�
 // iOS 動態佈局 - 子音（聲母）佈局 - 21個符號
 const consonants = [
   ['ㄅ', 'ㄆ', 'ㄇ', 'ㄈ', 'ㄉ', 'ㄊ', 'ㄋ', 'ㄌ'],
-  ['ㄍ', 'ㄎ', 'ㄏ', 'ㄐ', 'ㄑ', 'ㄒ', 'ㄓ', 'ㄔ'],
-  ['ㄕ', 'ㄖ', 'ㄗ', 'ㄘ', 'ㄙ']
+  ['ㄍ', 'ㄎ', 'ㄏ', 'ㄐ', 'ㄑ', 'ㄒ', 'ㄧ', 'ㄨ', 'ㄩ'],
+  ['ㄓ', 'ㄔ', 'ㄕ', 'ㄖ', 'ㄗ', 'ㄘ', 'ㄙ']
 ]
 
 // iOS 動態佈局 - 韻母、介音、聲調佈局
@@ -117,7 +117,7 @@ watch(() => props.currentInput, (newVal) => {
 // 處理按鍵輸入
 const handleInput = (char) => {
   if (props.disabled) return
-  
+
   // 如果按下的是聲調符號（第三排），且不在修正模式下，輸入聲調後自動加上空白，然後切回子音畫面
   if (useDynamicLayout.value && allTones.has(char) && char !== ' ' && !props.isCorrectionMode) {
     emit('input', char + ' ')
@@ -125,7 +125,7 @@ const handleInput = (char) => {
     isShiftActive.value = false
     return
   }
-  
+
   emit('input', char)
   // 狀態更新由 watcher 處理
 }
@@ -133,14 +133,14 @@ const handleInput = (char) => {
 // 處理退格鍵
 const handleBackspace = () => {
   if (props.disabled) return
-  
+
   // 檢查當前輸入的最後一個字符
   const currentInput = props.currentInput || ''
   const lastChar = currentInput.slice(-1)
-  
+
   // 先發送 backspace 事件
   emit('backspace')
-  
+
   // 如果使用動態佈局，根據刪除後的狀態決定鍵盤顯示
   if (useDynamicLayout.value) {
     // 如果最後一個字符是韻母或介音，刪除後應該保留在母音頁
@@ -218,10 +218,11 @@ const toggleLayout = () => {
       <div class="keys-container">
         <div v-for="(row, rowIndex) in currentRows" :key="rowIndex" class="keyboard-row"
           :class="{ 'centered-row': useDynamicLayout && showConsonants && rowIndex === 2 }">
+          <!-- 佔位按鍵（用於韻母頁面第二行錯開） -->
+          <div v-if="useDynamicLayout && !showConsonants && rowIndex === 1" class="key-btn dummy-key"></div>
           <!-- Shift 鍵（在動態佈局時，子音畫面顯示在第三排左側，韻母畫面顯示在第三排左側） -->
-          <button v-if="useDynamicLayout && rowIndex === currentRows.length - 1"
-            @click="toggleShift" class="key-btn action-key shift-key" :class="{ 'shift-active': isShiftActive }"
-            :disabled="disabled">
+          <button v-if="useDynamicLayout && rowIndex === currentRows.length - 1" @click="toggleShift"
+            class="key-btn action-key shift-key" :class="{ 'shift-active': isShiftActive }" :disabled="disabled">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 4L4 12H8V20H16V12H20L12 4Z" :fill="isShiftActive ? 'currentColor' : 'none'"
                 stroke="currentColor" stroke-width="2" />
@@ -229,8 +230,7 @@ const toggleLayout = () => {
           </button>
 
           <!-- 鍵盤按鍵 -->
-          <button v-for="char in row" :key="char" @click="handleInput(char)" 
-            class="key-btn" 
+          <button v-for="char in row" :key="char" @click="handleInput(char)" class="key-btn"
             :class="{ 'tone-key': useDynamicLayout && !showConsonants && rowIndex === 2 && allTones.has(char) }"
             :disabled="disabled">
             {{ char }}
@@ -297,7 +297,7 @@ const toggleLayout = () => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 6px;
+  padding: 3px;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -324,7 +324,18 @@ const toggleLayout = () => {
   gap: 6px;
 }
 
-
+/* 佔位按鍵 */
+.dummy-key {
+  visibility: hidden;
+  flex: 1;
+  max-width: 42px;
+  height: 46px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: none;
+}
 
 /* ============ 按鍵樣式 ============ */
 .key-btn {
